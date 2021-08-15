@@ -1,0 +1,122 @@
+<html>
+
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <h2>Employee Record Book</h2>
+    <p>Add a new employee</p>
+    <form id="create_employee_form">
+        <p>
+            <input type="text" placeholder="First name" name="first_name" required autocomplete="off" />
+        </p>
+        <p>
+            <input type="text" placeholder="Last name" name="last_name" required autocomplete="off" />
+        </p>
+        <p>
+            <input type="submit" value="Add Employee" />
+        </p>
+    </form>
+
+    <table id="employees_table">
+        <thead>
+            <tr>
+                <th id="id_column">ID</th>
+                <th id="view_info_column">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody id="employees_list"></tbody>
+    </table>
+</body>
+
+<style>
+    #employees_table {
+        border-collapse: collapse;
+        width: 50%;
+    }
+
+    #employees_table td,
+    #employees_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    #employees_table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    #employees_table tr:hover {
+        background-color: #ddd;
+    }
+
+    #employees_table th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .view-info {
+        color: blue;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    function getEmployeeInfo(employee_id) {
+        $.get({
+            url: `/employee/${employee_id}`,
+            complete: function (response) {
+                let employee = response.responseJSON;
+                alert(`First Name : ${employee.first_name}\nLastName : ${employee.last_name}`);
+            }
+        });
+    }
+
+    function renderEmployeesList() {
+        $.get({
+            url: '/employees',
+            complete: function (response) {
+                response.responseJSON.forEach(employee => {
+                    employee_row = `<tr><td>${employee.id}</td>`
+                    employee_row += `<td onclick="javascript: getEmployeeInfo('${employee.id}')" class='view-info'>View</td></tr>`
+                    $('#employees_list').append(employee_row);
+                });
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        // Render employees if exist.
+        renderEmployeesList();
+
+        $('#create_employee_form').on('submit', function (event) {
+            event.preventDefault();
+            $.post({
+                url: '/employees',
+                dataType: 'json',
+                contentType : 'application/json',
+                data: JSON.stringify({
+                    first_name: $('[name=first_name]').val(),
+                    last_name: $('[name=last_name]').val()
+                }),
+                complete: function (response) {
+                    // Clear fields.
+                    $('[name=first_name]').val("");
+                    $('[name=last_name]').val("");
+
+                    alert("Employee is created.")
+
+                    // Clear existing list.
+                    $('#employees_list').html("");
+                    
+                    renderEmployeesList();
+                }
+            });
+        });
+    })
+</script>
+
+</html>
